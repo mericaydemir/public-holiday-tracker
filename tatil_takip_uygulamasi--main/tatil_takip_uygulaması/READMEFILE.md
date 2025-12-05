@@ -1,95 +1,38 @@
-﻿# PublicHolidayTracker - Türkiye Resmi Tatil Takip Sistemi 🇹🇷
+PublicHolidayTracker – Türkiye Resmi Tatil Takip Sistemi 🇹🇷
 
-Bu proje, **Görsel Programlama** dersi kapsamında verilen dönem ödevi olarak geliştirilmiştir. Uygulama, belirtilen API servislerini kullanarak 2023, 2024 ve 2025 yıllarına ait Türkiye resmi tatil verilerini çeken, işleyen ve kullanıcıya konsol arayüzü üzerinden filtreleme imkanı sunan bir C# Konsol Uygulamasıdır.
+PublicHolidayTracker, Görsel Programlama dersi kapsamında dönem ödevi olarak geliştirilmiş bir C# konsol uygulamasıdır. Uygulama; Nager.Date API üzerinden 2023, 2024 ve 2025 yıllarına ait Türkiye resmi tatillerini çekerek kullanıcıya yıl, tarih veya isim bazlı arama yapma imkânı sunar. Projenin temel amacı, modern C# tekniklerini kullanarak API tabanlı veri alma, bu veriyi OOP prensipleri doğrultusunda modelleme ve etkileşimli bir konsol arayüzü tasarlama deneyimi kazandırmaktır.
 
-## Projenin Amacı ve Senaryo
+Bu kapsamda uygulama; API üzerinden elde edilen JSON verisini deserialize ederek nesnelere dönüştürür, kullanıcıyla etkileşim sağlayan bir menü sunar ve farklı filtreleme seçenekleri ile resmi tatilleri listeler. Veri alma işlemleri async/await yapısı ile asenkron şekilde gerçekleştirilerek uygulamanın donmasının önüne geçilmiştir. API’den gelen alan adlarında büyük/küçük harf uyumsuzluğu yaşanmaması için PropertyNameCaseInsensitive = true ayarı etkinleştirilmiştir. Ayrıca, kullanıcıların tarih girerken farklı formatlar kullanabileceği göz önünde bulundurularak akıllı bir tarih işleme algoritması geliştirilmiştir. Kullanıcıdan alınan tarih girdisi standart hale getirilerek gün ve ay değerleri güvenilir biçimde ayrıştırılmaktadır.
 
-Projenin temel amacı, modern C# tekniklerini kullanarak dış bir kaynaktan (API) veri çekmek, bu veriyi Nesne Yönelimli Programlama (OOP) prensiplerine uygun olarak modellemek ve kullanıcı etkileşimli bir arayüz sunmaktır.
+API tarafından dönen JSON verisinde fixed adında bir alan bulunduğundan, bu kelimenin C# dilinde rezerve edilmiş bir anahtar kelime olması sebebiyle doğabilecek çakışma @fixed şeklinde tanımlanarak çözülmüştür. Bu sayede model ile API uyumu korunmuş ve C# derleyicisiyle çelişmeyen bir yapı elde edilmiştir. Nullable tipler kullanılarak API’den boş gelebilecek verilere karşı hata koruması sağlanmıştır.
 
-Senaryo gereği uygulama:
-1.  **Nager.Date API** üzerinden JSON formatında veri çeker.
-2.  Verileri deserialize ederek bellekteki nesnelere dönüştürür.
-3.  Kullanıcının yıl, tarih veya isim bazlı arama yapmasına olanak tanır.
+Uygulamanın geliştirilmesinde Visual Studio Community 2026 ortamı, C# (.NET 8), HttpClient ile asenkron veri çekme, System.Text.Json kütüphanesi ile JSON çözümleme, LINQ ile veri sorgulama ve List<T> gibi generic koleksiyon yapıları kullanılmıştır. Bu teknolojiler sayesinde kod yapısı hem sade hem de genişletilebilir bir mimariye sahiptir.
 
-## Kullanılan Teknolojiler ve Kütüphaneler
+Projede kullanılan temel sınıf yapısı şu şekildedir:
 
-* **Geliştirme Ortamı (IDE):** Visual Studio Community 2026
-* **Dil:** C# (.NET Core / .NET 8)
-* **Veri İletişimi:** `System.Net.Http.HttpClient` (Asenkron veri çekme işlemi için)
-* **Veri İşleme:** `System.Text.Json` (JSON Deserialization için)
-* **Sorgulama:** LINQ (Language Integrated Query - Veri filtreleme için)
-* **Veri Yapıları:** Generic Collections (`List<T>`)
-
----
-
-## Teknik Detaylar ve Çözülen Problemler
-
-Proje geliştirme sürecinde karşılaşılan teknik zorluklar ve uygulanan çözümler aşağıda detaylandırılmıştır:
-
-### 1. `fixed` Anahtar Kelimesi Çakışması 
-API'den gelen JSON verisinde `fixed` isminde bir boolean alan bulunmaktadır. Ancak `fixed` kelimesi C# dilinde (pointer işlemleri için) rezerve edilmiş özel bir anahtar kelimedir (keyword).
-* **Çözüm:** Değişken ismi `public bool @fixed { get; set; }` şeklinde tanımlanarak C# derleyicisine bunun bir değişken olduğu (`verbatim identifier`) belirtilmiş ve model yapısı bozulmadan API uyumluluğu sağlanmıştır.
-
-### 2. Asenkron Veri Çekme (Async/Await) 
-Ağ işlemleri programın ana akışını bloklayabileceği için `HttpClient` istekleri senkron (beklemeli) değil, **asenkron** (`async/await`) yapıda kurgulanmıştır. Bu sayede veri çekilirken uygulamanın donması engellenmiştir.
-
-### 3. Akıllı Tarih Arama Algoritması 
-Kullanıcıların tarih girerken farklı formatlar (Örn: `15.07`, `15/07`, `15-7`, `15 07`) kullanabileceği öngörülmüştür.
-* **Çözüm:** Girilen input önce temizlenmekte (tüm ayıraçlar `-` işaretine çevrilmekte), ardından `Split` edilerek gün ve ay sayısal değerlere (`int`) dönüştürülmektedir. Bu sayede "07" ile "7" arasındaki string farkı ortadan kaldırılarak %100 doğru eşleşme sağlanmıştır.
-
-### 4. JSON Case Insensitive Ayarı 
-API'den gelen verilerin özellik isimlerinin büyük/küçük harf değişkenliği gösterebileceği (Örn: `Date` veya `date`) riskine karşı:
-```csharp
-var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-````
-
-ayarı kullanılarak veri kaybı önlenmiştir.
-
------
-
-## Sınıf Yapısı (Class Structure)
-
-Oluşturulan `Holiday` sınıfı aşağıdaki gibidir:
-
-```csharp
 public class Holiday
 {
-    public string? date { get; set; }        // Tatil Tarihi
-    public string? localName { get; set; }   // Yerel Ad (Türkçe)
-    public string? name { get; set; }        // Uluslararası Ad
-    public string? countryCode { get; set; } // Ülke Kodu
-    public bool @fixed { get; set; }         // Sabit/Değişken Tatil Durumu
-    public bool global { get; set; }         // Ulusal Tatil Durumu
+    public string? date { get; set; }        
+    public string? localName { get; set; }   
+    public string? name { get; set; }        
+    public string? countryCode { get; set; } 
+    public bool @fixed { get; set; }         
+    public bool global { get; set; }         
 }
-```
 
-*(Not: Nullable types (`?`) kullanılarak API'den boş gelebilecek değerlere karşı "Null Reference Exception" hatası önlenmiştir.)*
 
------
+Uygulama başlatıldığında kullanıcıyı aşağıdaki menü karşılar:
 
-## Uygulama Menüsü
-
-Uygulama çalıştırıldığında kullanıcıyı aşağıdaki gibi bir menü karşılamaktadır:
-
-```text
 ===== PublicHolidayTracker =====
 1. Tatil listesini göster (Yıl Seçmeli - 2023/24/25)
 2. Tarihe göre tatil ara (Akıllı Arama: gg-aa)
 3. İsme göre tatil ara (Örn: Cumhuriyet)
 4. Tüm tatilleri 3 yıl boyunca göster (2023–2025)
 5. Çıkış
-```
 
-## Kurulum ve Çalıştırma
 
-1.  Projeyi klonlayın veya zip olarak indirin.
-2.  **Visual Studio Community 2026** ile `PublicHolidayTracker.sln` dosyasını açın.
-3.  İnternet bağlantınızın aktif olduğundan emin olun (Veriler anlık çekilmektedir).
-4.  `F5` tuşuna basarak veya "Start" butonuna tıklayarak uygulamayı derleyip çalıştırın.
+Uygulamayı çalıştırmak için projenin kaynak dosyaları indirilip Visual Studio Community 2026 ile açılır, internet bağlantısının aktif olduğundan emin olunur ve F5 tuşu ile uygulama derlenip çalıştırılır. API’den veriler anlık olarak alındığı için çalıştırma sırasında internet zorunludur.
 
------
+Bu proje, C# ile API tabanlı veri işleme mantığını pekiştirmek ve konsol uygulamalarında kullanıcı deneyimini güçlendirmek amacıyla hazırlanmıştır. Kod yapısı modülerdir ve farklı yıl aralıkları, ek filtreleme seçenekleri veya veri kaydetme özellikleri gibi geliştirmelere açıktır.
 
-**Geliştirici Notu:** Bu proje, API tabanlı veri işleme mantığını kavramak ve C\# konsol uygulamalarında kullanıcı deneyimini (UX) iyileştirmek amacıyla hazırlanmıştır. Kod içerisindeki tüm metodlar modüler yapıda olup, geliştirilmeye açıktır.
-
-```
-```
+meriç aydemir 20230108049
